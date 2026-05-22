@@ -1,4 +1,4 @@
-# Asset Tokenization
+# Tokenized Treasury Bills
 
 A DAML project that models issuance and secondary transfer of tokenized Treasury Bills (T-Bills). The workflow includes issuer-controlled issuance, investor compliance checks, custody metadata, and an escrow-based secondary sale.
 
