@@ -1,0 +1,10 @@
+sdk-version: 3.4.11
+name: Asset-Tokenization-DAML-tests
+source: daml
+version: 1.0.0
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+data-dependencies:
+  - ../.daml/dist/Asset-Tokenization-DAML-1.0.0.dar

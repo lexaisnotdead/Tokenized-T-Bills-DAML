@@ -1,0 +1,80 @@
+module Tests.TBillTest where
+
+import Daml.Script
+import Contracts.TBill()
+import Contracts.TBillIssuance
+import Contracts.Compliance
+import Contracts.Escrow
+import Types
+import DA.Date
+
+testTBillWorkflow : Script ()
+testTBillWorkflow = script do
+
+  issuer    <- allocateParty "Issuer"
+  regulator <- allocateParty "Regulator"
+  custodian <- allocateParty "Custodian"
+  investor1 <- allocateParty "Investor1"
+  investor2 <- allocateParty "Investor2"
+
+  compliance1 <- submit regulator do
+    createCmd InvestorCompliance with
+      investor = investor1
+      regulator = regulator
+      kycApproved = True
+      accreditedInvestor = True
+      lastChecked = date 2026 May 22
+
+  compliance2 <- submit regulator do
+    createCmd InvestorCompliance with
+      investor = investor2
+      regulator = regulator
+      kycApproved = True
+      accreditedInvestor = True
+      lastChecked = date 2026 May 22
+
+  check1 <- submit regulator do
+    createCmd ComplianceCheck with
+      tbillReference = "TBILL-001"
+      investor = investor1
+      regulator = regulator
+
+  check2 <- submit regulator do
+    createCmd ComplianceCheck with
+      tbillReference = "TBILL-001"
+      investor = investor2
+      regulator = regulator
+
+  issuanceCid <- submit issuer do
+    createCmd TBillIssuance with
+      issuer = issuer
+      custodian = custodian
+      regulator = regulator
+
+  tbillCid <- submit issuer do
+    exerciseCmd issuanceCid
+      (IssueTBill 
+         (TBillDetails (date 2026 Jan 1) (date 2026 Dec 31) 1000.00 4.8 "US91234ABC45")
+         "TBILL-001"
+         investor1
+      )
+
+  debug "T-Bill successfully issued to Investor1"
+
+  escrowCid <- submit (actAs [investor1, investor2]) do
+    createCmd TBillEscrow with
+      seller = investor1
+      buyer = investor2
+      tbillCid = tbillCid
+      price = 985.50
+      regulator = regulator
+      custodian = custodian
+
+  debug "Escrow created for secondary trade"
+
+  newTBillCid <- submit (actAs [investor1, investor2]) do
+    exerciseCmd escrowCid (BuyerAccept check2 compliance2)
+
+  debug "T-Bill successfully transferred to Investor2 via Escrow"
+
+  pure ()

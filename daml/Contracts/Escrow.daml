@@ -1,0 +1,46 @@
+module Contracts.Escrow where
+
+import Types()
+import Contracts.TBill
+import Contracts.Compliance
+import DA.Date()
+
+template TBillEscrow
+  with
+    seller : Party
+    buyer : Party
+    tbillCid : ContractId TBill
+    price : Decimal
+    regulator : Party
+    custodian : Party
+  where
+    signatory seller, buyer
+    observer regulator, custodian
+
+    ensure price > 0.0
+
+    choice BuyerAccept : ContractId TBill
+      with
+        complianceCheckCid : ContractId ComplianceCheck  -- ComplianceCheck for buyer
+        investorComplianceCid : ContractId InvestorCompliance  -- InvestorCompliance buyer
+      controller buyer
+      do
+        -- Check buyer's compliance (buyer — controller ComplianceCheck)
+        exercise complianceCheckCid (VerifyForTransfer investorComplianceCid)
+
+        -- Transfer T-Bill to the new owner via Transfer (controller = seller = owner)
+        -- seller is authorized as signatory TBillEscrow
+        exercisedTBill <- exercise tbillCid
+          (Transfer buyer custodian complianceCheckCid investorComplianceCid)
+
+        pure exercisedTBill
+
+    choice SellerCancel : ()
+      controller seller
+      do
+        pure ()
+
+    choice Complete : ()
+      controller buyer
+      do
+        pure ()

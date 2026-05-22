@@ -1,0 +1,45 @@
+module Contracts.Compliance where
+
+import Types()
+import DA.Date
+
+template InvestorCompliance
+  with
+    investor : Party
+    regulator : Party
+    kycApproved : Bool
+    accreditedInvestor : Bool
+    lastChecked : Date
+  where
+    signatory regulator
+    observer investor
+
+    choice UpdateKYC : ContractId InvestorCompliance
+      with
+        newKycApproved : Bool
+        newAccredited : Bool
+      controller regulator
+      do
+        create this with
+          kycApproved = newKycApproved
+          accreditedInvestor = newAccredited
+          lastChecked = date 2026 May 22
+
+template ComplianceCheck
+  with
+    tbillReference : Text
+    investor : Party
+    regulator : Party
+  where
+    signatory regulator
+    observer investor
+
+    nonconsuming choice VerifyForTransfer : Bool
+      with
+        complianceCid : ContractId InvestorCompliance
+      controller investor
+      do
+        compliance <- fetch complianceCid
+        assert (compliance.kycApproved)
+        assert (compliance.accreditedInvestor)
+        pure True

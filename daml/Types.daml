@@ -1,0 +1,15 @@
+module Types where
+
+import DA.Date()
+
+data TBillDetails = TBillDetails
+  with
+    issueDate : Date
+    maturityDate : Date
+    faceValue : Decimal
+    discountRate : Decimal
+    isin : Text
+  deriving (Eq, Show)
+
+isActive : Date -> TBillDetails -> Bool
+isActive today details = today <= details.maturityDate

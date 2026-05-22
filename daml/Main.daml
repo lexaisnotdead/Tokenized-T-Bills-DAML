@@ -1,0 +1,7 @@
+module Main where
+
+import Contracts.TBill()
+import Contracts.TBillIssuance()
+import Contracts.Compliance()
+import Contracts.Escrow()
+import Types()

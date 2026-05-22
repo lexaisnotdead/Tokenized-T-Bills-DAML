@@ -1,0 +1,47 @@
+module Contracts.TBill where
+
+import Types
+import DA.Date
+import Contracts.Compliance
+
+template TBill
+  with
+    issuer : Party
+    owner : Party
+    custodian : Party
+    details : TBillDetails
+    reference : Text
+  where
+    signatory issuer
+    observer owner, custodian
+
+    ensure 
+      details.faceValue > 0.0
+      && isActive (date 2026 May 22) details
+
+    choice Transfer : ContractId TBill
+      with
+        newOwner : Party
+        newCustodian : Party
+        complianceCheckCid : ContractId ComplianceCheck
+        investorComplianceCid : ContractId InvestorCompliance
+      controller owner, newOwner
+      do
+        exercise complianceCheckCid (VerifyForTransfer investorComplianceCid)
+
+        create this with
+          owner = newOwner
+          custodian = newCustodian
+
+    choice RedeemAtMaturity : ()
+      with
+        today : Date
+      controller issuer
+      do
+        assert (not $ isActive today details)
+        pure ()
+
+    choice ArchiveTBill : ()
+      controller issuer
+      do 
+        pure ()

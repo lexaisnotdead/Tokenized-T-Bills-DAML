@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# DAML/DPM build artifacts and local package database
+.daml/
+
+# Local cache used by sandboxed/CI-like runs
+.cache/
+
+# Editor-local settings
+.vscode/

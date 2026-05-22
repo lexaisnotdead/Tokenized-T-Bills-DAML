@@ -1,0 +1,40 @@
+module Contracts.TBillIssuance where
+
+import Types
+import Contracts.TBill
+import DA.Date
+
+template TBillIssuance
+  with
+    issuer : Party
+    custodian : Party
+    regulator : Party
+  where
+    signatory issuer
+    observer regulator, custodian
+
+    choice IssueTBill : ContractId TBill
+      with
+        details : TBillDetails
+        reference : Text
+        initialOwner : Party
+      controller issuer
+      do
+        assert (details.faceValue > 0.0)
+        assert (isActive (date 2026 May 22) details)
+
+        create TBill with
+          issuer = issuer
+          owner = initialOwner
+          custodian = custodian
+          details = details
+          reference = reference
+
+    choice IssueMultipleTBills : [ContractId TBill]
+      with
+        issuances : [(TBillDetails, Text, Party)]
+      controller issuer
+      do
+        mapA (\(det, ref, owner) -> 
+                exercise self (IssueTBill det ref owner)
+             ) issuances
