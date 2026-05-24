@@ -43,8 +43,8 @@ dpm build --all
 
 This builds:
 
-- `.daml/dist/Asset-Tokenization-DAML-1.0.0.dar`
-- `tests/.daml/dist/Asset-Tokenization-DAML-tests-1.0.0.dar`
+- `.daml/dist/Tokenized-T-Bills-DAML-1.0.0.dar`
+- `tests/.daml/dist/Tokenized-T-Bills-DAML-tests-1.0.0.dar`
 
 ## Test
 
